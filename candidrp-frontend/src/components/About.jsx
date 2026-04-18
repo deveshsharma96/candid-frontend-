@@ -1,4 +1,6 @@
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import hero from "../assets/About.png";
 import { Link } from "react-router-dom";
 import ContactSection from "../components/ContactSection";
@@ -8,37 +10,94 @@ import img3 from "../assets/SandraShantanu.png";
 import img4 from "../assets/RishabhShantanu.png";
 import img5 from "../assets/SatishKumar.png"; 
 
-// Team images
-const team = [
-  { name: "Avinash Chander", img: img1 },
-  { name: "Merlyn Chander", img: img2 },
-  { name: "Sandra Shantanu", img: img3 },
-  { name: "Rishabh Shantanu", img: img4 },
-  { name: "Satish Kumar", img: img5 },
+
+
+const SLIDES = [
+  {
+    id: 1,
+    title: "OUR LEADERS,",
+    subtitle: "Avinash Chander",
+    image: img1,
+    prompt: "HEY @TEAM, VIEW AVINASH'S PROFILE"
+  },
+  {
+    id: 2,
+    title: "OUR LEADERS,",
+    subtitle: "Merlyn Chander",
+    image: img2,
+    prompt: "HEY @TEAM, VIEW MERLYN'S PROFILE"
+  },
+  {
+    id: 3,
+    title: "OUR LEADERS,",
+    subtitle: "Sandra Shantanu",
+    image: img3,
+    prompt: "HEY @TEAM, VIEW SANDRA'S PROFILE"
+  },
+  {
+    id: 4,
+    title: "OUR LEADERS,",
+    subtitle: "Rishabh Shantanu",
+    image: img4,
+    prompt: "HEY @TEAM, VIEW RISHABH'S PROFILE"
+  },
+  {
+    id: 5,
+    title: "OUR LEADERS,",
+    subtitle: "Satish Kumar",
+    image: img5,
+    prompt: "HEY @TEAM, VIEW SATISH'S PROFILE"
+  }
 ];
 
-const loopData = [...team, ...team]; // IMPORTANT // duplicate for infinite loop
 
-
+// animations
 const fadeUp = {
-  hidden: { opacity: 0, y: 40 },
+  hidden: { opacity: 0, y: 60 },
   show: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.6, ease: "easeOut"}
-  }
+    transition: { duration: 0.8, ease: "easeOut" },
+  },
 };
 
 const stagger = {
   hidden: {},
   show: {
     transition: {
-      staggerChildren: 0.15
-    }
-  }
+      staggerChildren: 0.2,
+    },
+  },
 };
 
 export default function About() {
+
+  const navigate = useNavigate();
+
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % SLIDES.length);
+    }, 4000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  const currentSlide = SLIDES[currentIndex];
+
+
+    const getBeltIndices = () => {
+    const indices = [];
+    for (let i = -5; i <= 5; i++) {
+      let idx = (currentIndex + i) % SLIDES.length;
+      if (idx < 0) idx = SLIDES.length + idx;
+      indices.push({ key: `${idx}-${i}`, image: SLIDES[idx].image });
+    }
+    return indices;
+  };
+
+  
   return (
     <div className="bg-white">
 
@@ -312,67 +371,126 @@ export default function About() {
 </section>
 
       {/* 🔵 LEADERS SECTION */}
-      <div className="bg-gray-100 py-16 px-6">
-  <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-10 items-center">
 
-    <div>
-      <h2 className="text-4xl text-[#2f1475] mb-4">Our Leaders</h2>
 
-      <p className="text-gray-600 mb-4">
-        Focused on delivering an unparalleled, personalized experience.
-      </p>
+ {/* 🔵 LEADERS SECTION */}
+            <div className="relative min-h-[50vh] flex items-center justify-center 
+            bg-gradient-to-br from-[#0b1a3a] via-[#3b0a6b] to-[#6d28d9] 
+            text-white overflow-hidden py-10">     {/* Background Lighting */}
+                  {/* BACKGROUND PREVIEW BELT: Moving in the background layer */}
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-40 overflow-hidden">
+                    <div className="flex gap-4 px-4 grayscale brightness-100">
+                      {getBeltIndices().map((item) => (
+                        <div key={item.key} className="w-48 h-64 flex-shrink-0">
+                          <img src={item.image} className="w-full h-full object-cover" alt="" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
 
-      <Link
-        to="/team"
-        className="text-blue-600 underline cursor-pointer hover:text-purple-600 transition"
-      >
-        View all leaders →
-      </Link>
-    </div>
-
-    <div className="h-80 overflow-hidden rounded-xl bg-gray-100 flex items-center relative">
-
-  {/* FADE */}
-  <div className="absolute left-0 top-0 h-full w-20 bg-gradient-to-r from-gray-100 to-transparent z-10"></div>
-  <div className="absolute right-0 top-0 h-full w-20 bg-gradient-to-l from-gray-100 to-transparent z-10"></div>
-
-  <motion.div
-    className="flex gap-8 items-center"
-    animate={{ x: [0, -1000] }} // 🔥 FIXED
-    transition={{
-      repeat: Infinity,
-      duration: 20,
-      ease: "linear",
-    }}
-  >
-    {loopData.map((member, i) => (
-      <div key={i} className="flex flex-col items-center min-w-[180px]">
-
-        {/* IMAGE */}
-        <div className="w-50 h-60 rounded-xl overflow-hidden border-2 border-white shadow-md">
-          <img
-            src={member.img}
-            alt={member.name}
-            className="w-full h-full object-cover"
-          />
+                  {/* UI LAYER: Content that needs to be positioned precisely */}
+            <div className="relative w-full max-w-[1600px] px-12 mx-auto flex items-center justify-center">       
+                    {/* TEXT CONTENT: Positioned on the left, independent of the box */}
+              <div className="
+                relative md:absolute
+                mt-6 md:mt-0
+                md:top-1/2 
+                md:left-24 
+                md:-translate-y-1/2 
+                z-50 
+                w-full md:w-fit 
+                text-center md:text-left
+                pointer-events-none
+              ">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={`text-${currentSlide.id}`}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -10 }}
+              transition={{ duration: 0.4 }}
+            >
+              <h2 className="text-gray-400 text-sm sm:text-lg md:text-3xl font-semibold uppercase">
+                {currentSlide.title}
+              </h2>
+              <h1 className="text-3xl sm:text-4xl md:text-8xl font-bold tracking-tighter mt-2 leading-[1.1] flex flex-col">
+                {currentSlide.subtitle.split(' ').map((word, i) => (
+                  <span key={i}>{word}</span>
+                ))}
+              </h1>
+              <p className="mt-4 text-gray-300 max-w-full md:max-w-xs text-xs sm:text-sm leading-relaxed">
+                Focused on delivering an unparalleled, personalized experience.
+              </p>
+              <div 
+  onClick={() => navigate("/team")}
+className="mt-4 flex items-center justify-center md:justify-start gap-2 group cursor-pointer pointer-events-auto"
+>
+  <span className="text-blue-500 text-xs font-bold tracking-[0.2em] uppercase group-hover:text-purple-400 transition-colors">
+    View all leaders
+  </span>
+  <span className="text-blue-500 group-hover:translate-x-1 transition-transform">
+    →
+  </span>
+</div>
+            </motion.div>
+          </AnimatePresence>
         </div>
 
-        {/* NAME */}
-        <p className="text-sm mt-2 text-gray-900 font-medium">
-          {member.name}
-        </p>
+        {/* THE CENTER BOX: Fixed in the center of the viewport */}
+      <div className="relative z-40 flex justify-center items-center w-full">  
+       <div className="p-1 border-2 border-dotted border-white/20 rounded-sm">
+            <div className="relative w-[200px] h-[280px] sm:w-[260px] sm:h-[360px] md:w-[360px] md:h-[500px] bg-transparent overflow-hidden flex items-center justify-center shadow-[0_0_100px_rgba(0,0,0,0.9)]">
+              
+              <AnimatePresence initial={false} mode="popLayout">
+                <motion.div
+                  key={currentSlide.id}
+                  initial={{ x: "100%" }}
+                  animate={{ x: 0 }}
+                  exit={{ x: "-100%" }}
+                  transition={{ duration: 0.7, ease: [0.32, 0.72, 0, 1] }}
+                  className="absolute inset-0 w-full h-full"
+                >
+                  <img
+                    src={currentSlide.image}
+                    className="w-full h-full object-cover brightness-100 grayscale-0"
+                    alt={currentSlide.subtitle}
+                  />
+                  {/* Subtle color grading overlay */}
+                  <div className="absolute inset-0 bg-purple-900/5 mix-blend-overlay pointer-events-none" />
+                </motion.div>
+              </AnimatePresence>
+
+              {/* BOTTOM PROMPT BAR: Anchored to bottom of image box */}
+              <div className="absolute bottom-6 left-4 right-4 md:left-6 md:right-6 bg-black p-4 flex items-center justify-between border border-white/5 shadow-2xl z-50">
+                <div className="flex-1 mr-4 overflow-hidden">
+                  <AnimatePresence mode="wait">
+                    <motion.p 
+                      key={`prompt-${currentSlide.id}`}
+                      initial={{ opacity: 0, y: 5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-[11px] font-bold tracking-wider uppercase text-center"
+                    >
+                      <span className="text-white/40">HEY</span>{" "}
+                      <span className="text-blue-500">@TEAM</span>,{" "}
+                      {currentSlide.prompt.split('@TEAM,')[1]}
+                    </motion.p>
+                  </AnimatePresence>
+                </div>
+                
+              </div>
+            </div>
+          </div>
+        </div>
 
       </div>
-    ))}
-  </motion.div>
 
-</div>
-
-
-
-  </div>
-</div>
       
+
+      {/* Film Grain Texture */}
+      <div className="fixed inset-0 pointer-events-none opacity-[0.03] bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
+    </div> 
+
+
 
 
 <ContactSection />
