@@ -10,20 +10,64 @@ import img3 from "../assets/SandraShantanu.png";
 import img4 from "../assets/RishabhShantanu.png";
 import img5 from "../assets/SatishKumar.png"; 
 import { FaArrowRight } from "react-icons/fa";
-import React, { useEffect, useState, useRef } from "react";
-import { motion, useInView, useScroll, useTransform, useSpring } from "framer-motion";
-import { useNavigate, Link } from "react-router-dom";
+import { motion, AnimatePresence, useInView } from "framer-motion";
+import React, { useState, useEffect, useRef,  useMemo } from "react";
+import { useNavigate, Link } from "react-router-dom"; // ✅ FIXED
+import { ChevronDown, Send } from 'lucide-react';
 
 // Team images
-const team = [
-  { name: "Avinash Chander", img: img1 },
-  { name: "Merlyn Chander", img: img2 },
-  { name: "Sandra Shantanu", img: img3 },
-  { name: "Rishabh Shantanu", img: img4 },
-  { name: "Satish Kumar", img: img5 },
+// const team = [
+//   { name: "Avinash Chander", img: img1 },
+//   { name: "Merlyn Chander", img: img2 },
+//   { name: "Sandra Shantanu", img: img3 },
+//   { name: "Rishabh Shantanu", img: img4 },
+//   { name: "Satish Kumar", img: img5 },
+// ];
+
+// const loopData = [...team, ...team]; 
+
+
+
+
+
+const SLIDES = [
+  {
+    id: 1,
+    title: "OUR LEADERS,",
+    subtitle: "Avinash Chander",
+    image: img1,
+    prompt: "HEY @TEAM, VIEW AVINASH'S PROFILE"
+  },
+  {
+    id: 2,
+    title: "OUR LEADERS,",
+    subtitle: "Merlyn Chander",
+    image: img2,
+    prompt: "HEY @TEAM, VIEW MERLYN'S PROFILE"
+  },
+  {
+    id: 3,
+    title: "OUR LEADERS,",
+    subtitle: "Sandra Shantanu",
+    image: img3,
+    prompt: "HEY @TEAM, VIEW SANDRA'S PROFILE"
+  },
+  {
+    id: 4,
+    title: "OUR LEADERS,",
+    subtitle: "Rishabh Shantanu",
+    image: img4,
+    prompt: "HEY @TEAM, VIEW RISHABH'S PROFILE"
+  },
+  {
+    id: 5,
+    title: "OUR LEADERS,",
+    subtitle: "Satish Kumar",
+    image: img5,
+    prompt: "HEY @TEAM, VIEW SATISH'S PROFILE"
+  }
 ];
 
-const loopData = [...team, ...team]; 
 
 // animations
 const fadeUp = {
@@ -44,70 +88,112 @@ const stagger = {
   },
 };
 
+
+const fadeLeft = {
+  hidden: { opacity: 0, x: -200 }, // OUTSIDE LEFT
+  show: {
+    opacity: 1,
+    x: 0,
+    transition: { duration: 0.9, ease: "easeOut" },
+  },
+};
+
+const fadeRight = {
+  hidden: { opacity: 0, x: 200 }, // OUTSIDE RIGHT
+  show: {
+    opacity: 1,
+    x: 0,
+    transition: { duration: 0.9, ease: "easeOut" },
+  },
+};
+
 export default function Hero() {
   const navigate = useNavigate();
 
-  const container = {
-    hidden: {},
-    show: {
-      transition: {
-        staggerChildren: 0.15,
-      },
-    },
+
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+    
+  
+  // Ref for scroll tracking
+  const containerRef = useRef(null);
+  const [hasAnimated, setHasAnimated] = useState(false);
+
+  // Persistence check for one-time animations
+  useEffect(() => {
+    const alreadyPlayed = sessionStorage.getItem("heroAnimation");
+    if (alreadyPlayed) {
+      setHasAnimated(true);
+    } else {
+      sessionStorage.setItem("heroAnimation", "true");
+    }
+  }, []);
+
+  // Use memo for the floating bubbles to prevent re-renders of static data
+  const blobs = useMemo(() => [
+    { left: "10%", delay: 0, size: 110, color: "from-cyan-400/20" },
+    { left: "25%", delay: 2, size: 140, color: "from-blue-400/20" },
+    { left: "45%", delay: 4, size: 90, color: "from-indigo-400/20" },
+    { left: "65%", delay: 1, size: 130, color: "from-purple-400/20" },
+    { left: "85%", delay: 3, size: 100, color: "from-cyan-400/20" },
+  ], []);
+
+
+  // Auto-rotate the slider every 5 seconds
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % SLIDES.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const currentSlide = SLIDES[currentIndex];
+
+  // Indices for background preview belt
+  const getBeltIndices = () => {
+    const indices = [];
+    for (let i = -5; i <= 5; i++) {
+      let idx = (currentIndex + i) % SLIDES.length;
+      if (idx < 0) idx = SLIDES.length + idx;
+      indices.push({ key: `${idx}-${i}`, image: SLIDES[idx].image });
+    }
+    return indices;
   };
 
-  const cardAnimation = {
-    hidden: {
-      opacity: 0,
-      scale: 0.9,
-      filter: "blur(10px)",
-    },
-    show: {
-      opacity: 1,
-      scale: 1,
-      filter: "blur(0px)",
-      transition: {
-        duration: 0.6,
-        ease: "easeOut",
-      },
-    },
-  };
 
 
-  // SCROLL SLIDES (RENAMED)
-  const scrollSlides = [
-    {
-      title: "VISUAL CLARITY.",
-      subtitle: "NEXT GENERATION INTERFACE",
-      description: "Precision-engineered components meeting glass-morphic design.",
-      stats: { label: "LATENCY", value: "14ms" },
-    },
-    {
-      title: "TOTAL CONTROL.",
-      subtitle: "DECENTRALIZED NODES",
-      description: "Seamlessly manage your assets across a global cluster.",
-      stats: { label: "UPTIME", value: "99.9%" },
-    },
-    {
-      title: "SCALABLE OPS.",
-      subtitle: "HYPER-FLUID TECH",
-      description: "Designed for massive throughput.",
-      stats: { label: "VOLUME", value: "$2.4B" },
-    },
-    {
-      title: "GET STARTED.",
-      subtitle: "JOIN THE NETWORK",
-      description: "Deploy your first environment in seconds.",
-      stats: { label: "STATUS", value: "ACTIVE" },
-    },
-  ];
 
+   const container = {
+  hidden: {},
+  show: {
+    transition: {
+      staggerChildren: 0.15,
+    },
+  },
+};
 
-  // HERO IMAGES
+const cardAnimation = {
+  hidden: {
+    opacity: 0,
+    scale: 0.9,
+    filter: "blur(10px)",
+  },
+  show: {
+    opacity: 1,
+    scale: 1,
+    filter: "blur(0px)",
+    transition: {
+      duration: 0.6,
+      ease: "easeOut",
+    },
+  },
+};
+
+  // ✅ HERO IMAGES
   const heroImages = [hero1, hero2, hero3];
 
-  // HERO SLIDER
-  const heroSlides = [
+  // ✅ CLONE FOR LOOP
+  const slides = [
     heroImages[heroImages.length - 1],
     ...heroImages,
     heroImages[0],
@@ -117,27 +203,25 @@ export default function Hero() {
   const [isAnimating, setIsAnimating] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
 
-  // ABOUT SECTION
+  // ✅ ABOUT SECTION COUNT FIX
   const [count, setCount] = useState(0);
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true });
 
-  
-
-  // AUTO SLIDE
+  // ✅ AUTO SLIDE (pause safe)
   useEffect(() => {
     if (isPaused) return;
 
     const interval = setInterval(() => {
       setCurrent((prev) => prev + 1);
-    }, 4000);
+    }, 3000);
 
     return () => clearInterval(interval);
   }, [isPaused]);
 
-  // LOOP FIX
+  // ✅ LOOP FIX (no glitch)
   useEffect(() => {
-    if (current === heroSlides.length - 1) {
+    if (current === slides.length - 1) {
       setTimeout(() => {
         setIsAnimating(false);
         setCurrent(1);
@@ -147,12 +231,12 @@ export default function Hero() {
     if (current === 0) {
       setTimeout(() => {
         setIsAnimating(false);
-        setCurrent(heroSlides.length - 2);
+        setCurrent(slides.length - 2);
       }, 800);
     }
-  }, [current, heroSlides.length]);
+  }, [current, slides.length]);
 
-  // RE-ENABLE ANIMATION
+  // ✅ RE-ENABLE ANIMATION
   useEffect(() => {
     if (!isAnimating) {
       requestAnimationFrame(() => {
@@ -161,60 +245,34 @@ export default function Hero() {
     }
   }, [isAnimating]);
 
-  // GLASS CIRCLE
-  const GlassCircle = ({ size, color, scrollYProgress, rotateSpeed, top, left, zIndex = 0 }) => {
-    const rotate = useTransform(scrollYProgress, [0, 1], [0, 360 * rotateSpeed]);
-    const floating = useTransform(scrollYProgress, [0, 1], [0, -150 * rotateSpeed]);
 
-    const smoothRotate = useSpring(rotate, { stiffness: 60, damping: 30 });
-    const smoothFloat = useSpring(floating, { stiffness: 60, damping: 30 });
-
-    return (
-      <motion.div
-        style={{ width: size, height: size, top, left, zIndex, y: smoothFloat, perspective: "1200px" }}
-        className="absolute flex items-center justify-center pointer-events-none"
-      >
-        <motion.div
-          style={{ rotateX: smoothRotate, rotateY: smoothRotate }}
-          className="relative w-full h-full rounded-full border border-white/30 backdrop-blur-2xl shadow-[0_0_120px_rgba(59,130,246,0.3)]"
-        >
-          <div className={`absolute inset-0 rounded-full bg-gradient-to-br ${color} opacity-40`} />
-          <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.4)_0%,transparent_70%)] opacity-60" />
-          <div className="absolute inset-[2px] rounded-full border border-white/20" />
-        </motion.div>
-      </motion.div>
-    );
-  };
-
-  // SCROLL SECTION
-  const containerRef = useRef(null);
-
- const { scrollYProgress } = useScroll({
-  target: containerRef,
-  offset: ["start start", "end start"], // 🔥 KEY FIX
-});
-
-  
-
-  const totalSlides = scrollSlides.length;
-
-  const xTranslate = useTransform(
-  scrollYProgress,
-  [0, 0.85], // ✅ STOP BEFORE END
-  ["0%", `-${(totalSlides - 1) * 100}%`]
-);
-const smoothX = useSpring(xTranslate, {
-  stiffness: 100,
-  damping: 30,
-  restDelta: 0.001,
-});
-
-  
+  const listContainer = {
+  hidden: {},
+  show: {
+    transition: {
+      delayChildren: 0.4,   // ⏱ starts a bit late
+      staggerChildren: 0.2,
+    },
+  },
+};
 
 
-  
-  // RETURN STARTS BELOW
 
+
+const listItem = {
+  hidden: {
+    opacity: 0,
+    y: -20, // start from TOP (hidden above)
+  },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.5,
+      ease: "easeOut",
+    },
+  },
+};
 
 
   
@@ -222,222 +280,188 @@ const smoothX = useSpring(xTranslate, {
     <div className="w-full overflow-hidden">
 
 
-      <div ref={containerRef} className="relative bg-[#02040a] text-white">
-      {/* Scrollable Area */}
-      <div
-        className="relative"
-        style={{ height: "100vh" }}
-      >
-        
-        {/* Sticky viewport */}
-        <div className="sticky top-0 h-screen w-full overflow-hidden">
-          
-          <div className="absolute bottom-0 left-0 w-full h-40 
-            bg-gradient-to-t from-white to-transparent z-20 pointer-events-none" />
-          
-          {/* BACKGROUND LAYER (Fixed horizontally, moves vertically with scroll) */}
-          <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
-            {/* Ambient Glows */}
-            <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] bg-blue-600/10 rounded-full blur-[140px]" />
-            <div className="absolute bottom-[10%] right-[-10%] w-[50%] h-[50%] bg-indigo-600/10 rounded-full blur-[140px]" />
-
-            {/* These circles are OUTSIDE the motion.div (smoothX),
-                so they don't move left/right when the slides do.
-                They are 'absolute' inside a 'sticky' container, meaning they
-                stay "fixed" to the screen horizontally but can animate 
-                internally (floating/rotating).
-            */}
-            <GlassCircle 
-              size="min(600px, 80vw)" 
-              color="from-blue-400/30 to-blue-800/40" 
-              scrollYProgress={scrollYProgress}
-              rotateSpeed={0.7}
-              top="10%"
-              left="45%" 
-              zIndex={0}
-            />
-            
-            <GlassCircle 
-              size="300px" 
-              color="from-cyan-300/40 to-blue-500/20" 
-              scrollYProgress={scrollYProgress}
-              rotateSpeed={-1.1}
-              top="55%"
-              left="10%"
-              zIndex={0}
-            />
-
-            <GlassCircle 
-              size="180px" 
-              color="from-indigo-400/40 to-purple-500/20" 
-              scrollYProgress={scrollYProgress}
-              rotateSpeed={2.2}
-              top="20%"
-              left="15%"
-              zIndex={0}
-            />
-          </div>
-
-          {/* HORIZONTAL TRACK (Only the content moves left) */}
-          <div className="w-full h-full overflow-hidden"> 
-          <motion.div
-            style={{
-              x: smoothX,
-              width: `${scrollSlides.length * 100}%`,
-            }}
-            className="relative z-10 flex h-full will-change-transform"
-            >
-            {scrollSlides.map((slide, index) => (
-              <section 
-                key={index} 
-                className="w-screen h-screen flex-shrink-0 flex items-center px-8 md:px-24 overflow-hidden"
-              >
-                <div className="max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative">
-                  
-                  {/* Text Content */}
-                  <div className="space-y-8 relative">
-                    <div className="flex items-center gap-3">
-                      <div className="h-[1px] w-12 bg-blue-500 shadow-[0_0_8_rgba(59,130,246,0.5)]" />
-                      <motion.span
-                initial={{ x: "100%", opacity: 0 }}   // 👉 start from RIGHT outside
-                animate={{ x: 0, opacity: 1 }}        // 👉 move to normal position
-                transition={{
-                  duration: 0.5,
-                  ease: "easeOut",
-                }}
-                className="text-blue-400 text-xs font-bold uppercase tracking-[0.4em]"
-              >
-                {slide.subtitle}
-              </motion.span>
-                    </div>
-                    
-                    <motion.h2 className="text-6xl md:text-9xl font-black tracking-tighter leading-[0.85]">
-
-  {/* VISUAL */}
-  <motion.div
-    initial={{ x: "-100%", opacity: 0 }}
-    animate={{ x: 0, opacity: 1 }}
-    transition={{ duration: 0.4, ease: "easeOut" }}
-  >
-    {slide.title.split(" ")[0]}
-  </motion.div>
-
-  {/* CLARITY */}
-  <motion.div
-    initial={{ x: "-100%", opacity: 0 }}
-    animate={{ x: 0, opacity: 1 }}
-    transition={{
-      duration: 0.4,
-      ease: "easeOut",
-      delay: 0.2, // ⚡ very small delay
-    }}
-    className="text-transparent bg-clip-text bg-gradient-to-r from-purple-700 to-cyan-300"
-  >
-    {slide.title.split(" ")[1]}
-  </motion.div>
-  
-
-</motion.h2>
-
-                    
-                    <p className="text-xl text-slate-300/90 max-w-lg font-light leading-relaxed drop-shadow-lg">
-                      {slide.description}
-                    </p>
-                    
-                    <div className="pt-4">
-                      <button className="px-10 py-5 bg-white text-black font-bold rounded-full hover:shadow-[0_0_30px_rgba(255,255,255,0.3)] transition-all duration-300 relative z-20">
-                        Explore Interface
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Visual Stats Card */}
-                  <div className="hidden lg:flex justify-end relative z-20">
-<motion.div
-  initial={{ opacity: 0, y: 120, scale: 0.85, rotateX: 15 }}
-  animate={{ opacity: 1, y: 0, scale: 1, rotateX: 0 }}
-  transition={{
-    duration: 0.9,
-    ease: [0.16, 1, 0.3, 1], // 🔥 smooth premium easing
-  }}
-  whileHover={{
-    scale: 1.03,
-    rotateX: 2,
-    rotateY: -2,
-  }}
-  className="p-12 rounded-3xl border border-white/20 bg-black/40 backdrop-blur-2xl shadow-2xl min-w-[340px] relative overflow-hidden"
->
-
-  {/* Glow Effect */}
-<motion.div
-  animate={{ opacity: [0.3, 0.6, 0.3], scale: [1, 1.2, 1] }}
-  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-  className="absolute -top-24 -right-24 w-80 h-80 bg-blue-500/20 blur-[140px] rounded-full"
-/>
-
-<motion.div
-  initial={{ x: "-100%" }}
-  animate={{ x: "120%" }}
-  transition={{
-    duration: 1.2,
-    delay: 0.5,
-    ease: "easeInOut",
-  }}
-  className="absolute top-0 left-0 w-1/2 h-full bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-[-20deg]"
-/>
-
-
-
-                      <div className="text-xs text-blue-400 font-bold mb-2 tracking-[0.2em] uppercase">Status Check</div>
-                      <motion.div
-  initial={{ opacity: 0, y: 40 }}
-  animate={{ opacity: 1, y: 0 }}
-  transition={{ delay: 0.3, duration: 0.5 }}
-  className="text-7xl font-mono tracking-tighter mb-6"
->
-  {slide.stats.value}
-</motion.div>
-                      <div className="h-[1px] w-full bg-white/10 mb-6" />
-                      <div className="flex items-end gap-2 h-14">
-                         {[...Array(8)].map((_, i) => (
-                           <motion.div 
-                             key={i}
-                             animate={{ height: ["20%", "100%", "40%"] }} 
-                             transition={{ repeat: Infinity, duration: 1.2 + (i * 0.15), ease: "easeInOut" }}
-                             className="flex-1 bg-gradient-to-t from-blue-600 to-purple-400 rounded-full" 
-                           />
-                         ))}
-                      </div>
-                    </motion.div>
-                  </div>
-                </div>
-              </section>
-            ))}
-          </motion.div>
-        </div>
-      </div>
-      </div> 
-
-      {/* Progress Bar (Fixed) */}
-      <div className="fixed bottom-1 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-1">
       
-        <div className="w-44 h-[2px] bg-white/10 rounded-full overflow-hidden">
-          <motion.div 
-            style={{ scaleX: scrollYProgress }} 
-            className="h-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.8)] origin-left" 
-          />
+    <div className="w-full overflow-hidden min-h-screen" ref={containerRef}>
+      {/* ================= LANDING HERO ================= */}
+<section className="relative min-h-screen w-full overflow-hidden text-white flex items-center justify-center px-4">
+        
+        {/* BACKGROUND LAYERS */}
+  <div className="absolute inset-0 bg-gradient-to-b from-[#07071a] via-[#020205] to-black z-0" />
+
+        {/* GLOW BACKGROUNDS */}
+        <div 
+          className="absolute top-[18%] left-1/2 -translate-x-1/2 w-[1200px] h-[650px] bg-[#2563eb]/30 blur-[190px] rounded-full transform-gpu"
+          style={{ transform: 'translateX(-50%) translateZ(0)' }}
+        />
+        <div 
+          className="absolute top-[50%] left-1/2 -translate-x-1/2 w-[900px] h-[450px] bg-[#9333ea]/25 blur-[170px] rounded-full transform-gpu"
+          style={{ transform: 'translateX(-50%) translateZ(0)' }}
+        />
+
+        {/* NEW CYBER-GLASS BUBBLES */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden z-10">
+          {blobs.map((item, i) => (
+            <motion.div
+              key={i}
+              className="absolute will-change-transform"
+              style={{
+                width: item.size,
+                height: item.size,
+                left: item.left,
+                bottom: "-150px",
+              }}
+              initial={{ opacity: 0, scale: 0.5, y: 0, rotate: 0 }}
+              animate={{
+                y: "-120vh",
+                x: [0, i % 2 === 0 ? 30 : -30, 0],
+                scale: [0.7, 1.1, 0.8],
+                opacity: [0, 0.6, 0],
+                rotate: 360
+              }}
+              transition={{
+                duration: 15 + i * 3,
+                ease: "linear",
+                repeat: Infinity,
+                delay: item.delay,
+              }}
+            >
+              {/* DIAMOND REFRACTION EFFECT */}
+              <div className={`absolute inset-0 rounded-[35%] bg-gradient-to-br ${item.color} to-transparent backdrop-blur-[8px] border-[0.5px] border-white/30 rotate-12 shadow-[0_0_20px_rgba(255,255,255,0.1)]`} />
+              
+              {/* INTERNAL NEON CORE */}
+              <div className="absolute inset-[20%] rounded-full bg-gradient-to-tr from-white/10 to-transparent blur-[2px]" />
+              
+              {/* SHARP REFLECTION SPECK */}
+              <div className="absolute top-[15%] left-[15%] w-[15%] h-[15%] bg-white/60 rounded-full blur-[1px]" />
+              
+              {/* SECONDARY GLOW */}
+              <div className="absolute inset-0 rounded-full bg-cyan-500/5 blur-[40px]" />
+            </motion.div>
+          ))}
         </div>
-        <span className="text-[10px] tracking-[0.5em] text-white/60 uppercase font-bold">
-          Navigation
-        </span>
-      </div>
+
+        {/* CURVE SVG */}
+        <div className="absolute top-[55%] md:top-[12%] left-1/2 -translate-x-1/2 w-full max-w-[1600px] pointer-events-none">
+          <svg viewBox="0 0 1600 600" className="w-full h-auto overflow-visible">
+            <motion.path
+              initial={{ pathLength: 0 }}
+              animate={{ pathLength: 1 }}
+              transition={{ duration: 2.5, ease: "easeInOut" }}
+              d="M0 260 Q800 720 1600 260"
+              stroke="url(#curveGradient)"
+              strokeWidth="10"
+              fill="transparent"
+              style={{
+                filter: "drop-shadow(0 0 30px #3b82f6)",
+                willChange: "filter"
+              }}
+            />
+            <motion.path
+              initial={{ pathLength: 0 }}
+              animate={{ pathLength: 1 }}
+              transition={{ duration: 2.5, delay: 0.1, ease: "easeInOut" }}
+              d="M0 260 Q800 720 1600 260"
+              stroke="url(#whiteFade)"
+              strokeWidth="2"
+              fill="transparent"
+            />
+            <defs>
+              <linearGradient id="curveGradient">
+                <stop offset="0%" stopColor="#00E5FF" stopOpacity="0" />
+                <stop offset="15%" stopColor="#00E5FF" />
+                <stop offset="50%" stopColor="#6366f1" />
+                <stop offset="85%" stopColor="#A020F0" />
+                <stop offset="100%" stopColor="#A020F0" stopOpacity="0" />
+              </linearGradient>
+              <linearGradient id="whiteFade">
+                <stop offset="0%" stopColor="white" stopOpacity="0" />
+                <stop offset="20%" stopColor="white" />
+                <stop offset="80%" stopColor="white" />
+                <stop offset="100%" stopColor="white" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+
+        {/* WATER DROPS */}
+        <div className="absolute top-[55%] md:top-[12%] left-1/2 -translate-x-1/2 w-full max-w-[1600px] pointer-events-none">
+          <svg viewBox="0 0 1600 600" className="w-full h-auto overflow-visible">
+            {[...Array(8)].map((_, i) => (
+              <motion.circle
+                key={i}
+                r={2 + Math.random() * 2}
+                fill="white"
+                initial={{ offsetDistance: "0%" }}
+                animate={{ offsetDistance: "100%" }}
+                transition={{
+                  duration: 8 + Math.random() * 4,
+                  ease: "linear",
+                  repeat: Infinity,
+                  delay: i * 1.2
+                }}
+                style={{
+                  offsetPath: "path('M0 260 Q800 720 1600 260')",
+                  filter: "drop-shadow(0 0 4px #00E5FF)",
+                  willChange: "transform"
+                }}
+              />
+            ))}
+          </svg>
+        </div>
+
+        {/* CONTENT SECTION */}
+        <div className="relative z-20 w-full max-w-[1200px] px-6 flex flex-col items-center text-center">
+          <motion.h1
+            initial={
+              hasAnimated ? false : { opacity: 0, filter: "blur(14px)", letterSpacing: "0.3em" }
+            }
+            animate={{ opacity: 1, filter: "blur(0px)", letterSpacing: "0.8em" }}
+            transition={{ delay: 0.5, duration: 1.2, ease: "anticipate" }}
+            className="text-4xl sm:text-6xl md:text-8xl font-semibold 
+            tracking-[0.2em] sm:tracking-[0.4em] md:tracking-[0.8em] text-white"
+            style={{ fontFamily: "'Orbitron', sans-serif" }}
+          >
+             <span className="inline-block translate-x-[0.4em]">CANDID</span>
+          </motion.h1>
+
+          <motion.h2
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.0, duration: 0.8 }}
+            className="mt-6 text-4xl md:text-5xl font-bold bg-gradient-to-r from-[#6366f1] to-[#a855f7] bg-clip-text text-transparent"
+          >
+            RESOURCING PARTNERS
+          </motion.h2>
+
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.4, duration: 0.8 }}
+            className="mt-5 text-gray-300 max-w-2xl"
+          >
+            Connecting Talent to Opportunity & Find the Perfect Fit with Us. Strategic recruitment solutions across banking, finance, IT and healthcare industries.
+          </motion.p>
+
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.8 }}
+            onClick={() => navigate("/about")}
+            className="mt-10 px-14 py-3 rounded-full bg-white/5 backdrop-blur-xl border border-white/10 hover:bg-white/15 transition-all duration-300 shadow-[0_0_30px_rgba(99,102,241,0.1)]"
+          >
+            Explore
+          </motion.button>
+        </div>
+
+        {/* BOTTOM FADE */}
+        <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-white to-transparent z-10 pointer-events-none" />
+</section>
     </div>
 
-
       {/* ================= HERO ================= */}
-      <section className="relative h-screen w-full overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-40 
-bg-gradient-to-b from-white to-transparent z-20 pointer-events-none" />
+      <section className="relative h-[70vh] w-full overflow-hidden">
 
         {/* SLIDER */}
         <motion.div
@@ -449,7 +473,7 @@ bg-gradient-to-b from-white to-transparent z-20 pointer-events-none" />
               : { duration: 0 }
           }
         >
-          {heroSlides.map((img, index) => (
+          {slides.map((img, index) => (
             <img
               key={index}
               src={img}
@@ -457,6 +481,8 @@ bg-gradient-to-b from-white to-transparent z-20 pointer-events-none" />
             />
           ))}
         </motion.div>
+
+        
 
         {/* OVERLAY */}
         {/* <div className="absolute inset-0 bg-gradient-to-r from-[#1f0434]/90 via-[#0d0764]/20 to-transparent"></div> */}
@@ -473,102 +499,54 @@ bg-gradient-to-b from-white to-transparent z-20 pointer-events-none" />
   }}
 ></div>
         
-        {/* CONTENT */}
-<div className="absolute inset-0 z-10 flex items-center pt-20  px-16 text-white">
+<div className="absolute inset-0 z-10 flex items-center justify-start px-16 text-white">
   <motion.div
-    className="max-w-2xl"
+    className="max-w-2xl text-left"
     initial={{ opacity: 0, x: -80 }}
     animate={{ opacity: 1, x: 0 }}
     transition={{ duration: 1, ease: "easeOut" }}
   >
+
+    <h1 className="text-5xl md:text-5xl font-extrabold tracking-tight mb-6 leading-[1.1]">
+      FIND THE PERFECT{" "}
+      <span className="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
+         FIT WITH US!
+      </span>
+    </h1>
+
+    <p className="text-xl text-indigo-100 leading-relaxed max-w-xl">
+      Our team brings extensive knowledge of your specific talent requirements across industries.
+    </p>
+
     
-  <h1 className="text-5xl md:text-6xl font-extrabold text-white tracking-tight mb-6 leading-[1.1]">
-               Connecting Talent to Opportunity &{" "}
-              <span className="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
-                Find the Perfect Fit with Us!
-              </span>
-            </h1>
 
-            <p className="text-xl text-indigo-100 leading-relaxed max-w-xl">
-                      Our team brings extensive knowledge of your specific talent requirements across industries.
-
-            </p>
-      <br/><br/>
+  </motion.div>
+  
+  
+</div> 
 
 
 
-    <button
-  onClick={() => navigate("/about")}
-  className="group relative flex items-center 
-  w-[200px] h-[60px] rounded-full overflow-hidden
-  bg-gradient-to-r from-purple-800 via-purple-600 to-purple-500
-  text-white font-semibold tracking-wide
-  shadow-[0_8px_25px_rgba(128,0,128,0.4)]
-  transition-all duration-500"
->
-  {/* Sliding Circle */}
-  <div
-    className="absolute left-1 top-1 w-[52px] h-[52px] 
-    bg-gray-200 rounded-full flex items-center justify-center
-    text-purple-700 text-xl
-    transition-all duration-500 ease-in-out
-    group-hover:left-[calc(100%-56px)]"
-  >
-    →
-  </div>
 
-  {/* Text */}
-  <span
-    className="w-full text-center transition-all duration-500
-    group-hover:-translate-x-4"
-  >
-    Read More
-  </span>
-</button>
-
-
-  </motion.div> {/* ✅ IMPORTANT: correct closing */}
-  {/* Bottom Fade */}
-        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-white to-transparent" />
-</div>
-        
-
-       
-        {/* DIAMOND INDICATORS */}
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-3 z-20">
-  {heroImages.map((_, index) => (
-    <button
-      key={index}
-      onClick={() => {
-        setCurrent(index + 1);
-        setIsPaused(true);
-
-        setTimeout(() => {
-          setIsPaused(false);
-        }, 5000);
-      }}
-      className={`text-xl transition-all ${
-        current === index + 1
-          ? "text-purple-700 scale-125"
-          : "text-white/50"
-      }`}
-    >
-      ◈
-    </button>
-  ))}
-</div>
 
       </section>
 
       {/* ================= ABOUT ================= */}
       <motion.section
         ref={ref}
-        className="py-20 px-16 bg-white grid md:grid-cols-2 gap-10 items-center"
+        className="py-20 bg-white overflow-hidden"
         variants={stagger}
         initial="hidden"
-        animate="show"
+        whileInView="show"
+        viewport={{ once: true, margin: "-100px" }}
       >
-        <motion.div variants={fadeUp}>
+        <div className="grid md:grid-cols-2 items-center max-w-[1200px] mx-auto relative">
+
+          {/* TEXT → FROM LEFT */}
+          <motion.div 
+            variants={fadeLeft}
+            className="px-6 md:px-0 md:-ml-20"
+          >
           <span className="bg-gradient-to-r from-purple-900 to-purple-500  text-yellow-400 px-3 py-2 rounded-full text-sm font-medium">
             
             ABOUT US
@@ -587,22 +565,42 @@ bg-gradient-to-b from-white to-transparent z-20 pointer-events-none" />
           </p>
 
           <h2 className="text-xl font-bold mt-4 mb-4 text-[#3d0275]">
-            CORE COMPETENCIES
-          </h2>
+              CORE COMPETENCIES
+            </h2>
 
-          <ul className="text-gray-600 mb-6 space-y-1">
-            <li>• Banking</li>
-            <li>• IT</li>
-            <li>• Finance</li>
-            <li>• Healthcare</li>
-          </ul>
+            <motion.ul
+              className="text-gray-600 mb-6 space-y-1 overflow-hidden"
+              variants={listContainer}
+              initial="hidden"
+              whileInView="show"
+              viewport={{ once: true }}
+            >
+              {["Banking", "IT", "Finance", "Healthcare"].map((item, i) => (
+                <motion.li key={i} variants={listItem}>
+                  • {item}
+                </motion.li>
+              ))}
+            </motion.ul>
         </motion.div>
 
-        <motion.div variants={fadeUp} className="relative">
-         <img src={aboutImg2} className="rounded-xl w-90" />     
+
+
+        
+
+        {/* IMAGE → FROM RIGHT */}
+    <motion.div 
+      variants={fadeRight}
+      className="flex justify-center"
+    >
+      <img 
+        src={aboutImg2} 
+        className="rounded-xl w-90  md:-ml-0 md:-mr-40"  
           
-        </motion.div>
-      </motion.section>
+        />
+    </motion.div>
+
+  </div>
+</motion.section>
 
     
 
@@ -676,31 +674,61 @@ bg-gradient-to-b from-white to-transparent z-20 pointer-events-none" />
 </section>
 
 {/* ================= CTA ================= */}
-      <motion.section
-  className="py-20 px-16 
+<motion.section
+  className="relative py-20 px-6 md:px-16
   bg-gradient-to-r from-[#1f0638] via-[#5b2c91] to-[#9b5de5]
-  text-white flex justify-between items-center"
+  text-white overflow-hidden"
   initial={{ opacity: 0 }}
   whileInView={{ opacity: 1 }}
   transition={{ duration: 1 }}
 >
-  <div>
-    <h2 className="text-3xl font-bold">
+
+{/* TEXTURE */}
+<div className="absolute inset-0 pointer-events-none z-[1]">
+  <div
+    className="w-full h-full"
+    style={{
+      backgroundImage: `
+        radial-gradient(circle at 20% 30%, rgba(255,255,255,0.12) 2px, transparent 2px),
+        radial-gradient(circle at 80% 70%, rgba(255,255,255,0.10) 3px, transparent 3px),
+        radial-gradient(circle at 60% 20%, rgba(255,255,255,0.08) 2px, transparent 2px),
+        conic-gradient(from 45deg at 30% 40%, rgba(255,255,255,0.06), transparent 60%),
+        conic-gradient(from 120deg at 70% 60%, rgba(255,255,255,0.05), transparent 70%)
+      `,
+      backgroundSize: "120px 120px, 150px 150px, 180px 180px, 300px 300px, 400px 400px",
+    }}
+  />
+</div>
+
+{/* CONTENT */}
+<div className="
+  relative z-10 
+  w-full max-w-[1200px] mx-auto
+  flex flex-col md:flex-row
+  md:items-center md:justify-between
+  gap-8 md:gap-12
+">
+
+  {/* TEXT */}
+  <div className="max-w-[650px] text-left">
+    <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight">
       Meet Your HR Needs with India's Leading Recruitment Agency
     </h2>
-    <p className="text-gray-200 mt-2">
+    <p className="text-gray-200 mt-3">
       Discover end-to-end HR solutions.
     </p>
   </div>
 
+  {/* BUTTON */}
   <motion.button
-   onClick={() => navigate("/about")}
-  
+    onClick={() => navigate("/about")}
     whileHover={{ scale: 1.05 }}
-    className="bg-white text-black px-6 py-3 rounded-full"
+    className="bg-white text-black px-6 py-3 rounded-full w-fit md:shrink-0"
   >
     Explore More →
   </motion.button>
+
+</div>
 </motion.section>
 
       {/* ================= INVESTORS ================= */}
@@ -716,8 +744,8 @@ bg-gradient-to-b from-white to-transparent z-20 pointer-events-none" />
             INVESTORS
           </span>
 
-          <h2 className="text-3xl font-bold mt-4 mb-4 text-[#531192]">
-            Global Talent Solutions
+          <h2 className="text-4xl font-bold mt-4 mb-4 text-[#531192]">
+            GLOBAL TALENT SOLUTIONS
           </h2>
 
           <p className="text-gray-600">
@@ -736,75 +764,127 @@ bg-gradient-to-b from-white to-transparent z-20 pointer-events-none" />
       </motion.section>
 
       
-{/* 🔵 LEADERS SECTION */}
-      <section className="bg-gray-100 py-16 px-6">
-  <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-10 items-center">
+            {/* 🔵 LEADERS SECTION */}
+            <div className="relative min-h-[50vh] flex items-center justify-center 
+            bg-gradient-to-br from-[#0b1a3a] via-[#3b0a6b] to-[#6d28d9] 
+            text-white overflow-hidden py-10">     {/* Background Lighting */}
+                  {/* BACKGROUND PREVIEW BELT: Moving in the background layer */}
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-40 overflow-hidden">
+                    <div className="flex gap-4 px-4 grayscale brightness-100">
+                      {getBeltIndices().map((item) => (
+                        <div key={item.key} className="w-48 h-64 flex-shrink-0">
+                          <img src={item.image} className="w-full h-full object-cover" alt="" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
 
-    <div>
-      <h2 className="text-4xl text-[#4e0f89] mb-4">
-        Our Leaders
-      </h2>
+                  {/* UI LAYER: Content that needs to be positioned precisely */}
+            <div className="relative w-full max-w-[1600px] px-12 mx-auto flex items-center justify-center">       
+                    {/* TEXT CONTENT: Positioned on the left, independent of the box */}
+              <div className="
+                relative md:absolute
+                mt-6 md:mt-0
+                md:top-1/2 
+                md:left-24 
+                md:-translate-y-1/2 
+                z-50 
+                w-full md:w-fit 
+                text-center md:text-left
+                pointer-events-none
+              ">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={`text-${currentSlide.id}`}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -10 }}
+              transition={{ duration: 0.4 }}
+            >
+              <h2 className="text-gray-400 text-sm sm:text-lg md:text-3xl font-semibold uppercase">
+                {currentSlide.title}
+              </h2>
+              <h1 className="text-3xl sm:text-4xl md:text-8xl font-bold tracking-tighter mt-2 leading-[1.1] flex flex-col">
+                {currentSlide.subtitle.split(' ').map((word, i) => (
+                  <span key={i}>{word}</span>
+                ))}
+              </h1>
+              <p className="mt-4 text-gray-300 max-w-full md:max-w-xs text-xs sm:text-sm leading-relaxed">
+                Focused on delivering an unparalleled, personalized experience.
+              </p>
+              <div 
+  onClick={() => navigate("/team")}
+className="mt-4 flex items-center justify-center md:justify-start gap-2 group cursor-pointer pointer-events-auto"
+>
+  <span className="text-blue-500 text-xs font-bold tracking-[0.2em] uppercase group-hover:text-purple-400 transition-colors">
+    View all leaders
+  </span>
+  <span className="text-blue-500 group-hover:translate-x-1 transition-transform">
+    →
+  </span>
+</div>
+            </motion.div>
+          </AnimatePresence>
+        </div>
 
-      <p className="text-gray-600 mb-4">
-        Focused on delivering an unparalleled, personalized experience.
-      </p>
+        {/* THE CENTER BOX: Fixed in the center of the viewport */}
+      <div className="relative z-40 flex justify-center items-center w-full">  
+       <div className="p-1 border-2 border-dotted border-white/20 rounded-sm">
+            <div className="relative w-[200px] h-[280px] sm:w-[260px] sm:h-[360px] md:w-[360px] md:h-[500px] bg-transparent overflow-hidden flex items-center justify-center shadow-[0_0_100px_rgba(0,0,0,0.9)]">
+              
+              <AnimatePresence initial={false} mode="popLayout">
+                <motion.div
+                  key={currentSlide.id}
+                  initial={{ x: "100%" }}
+                  animate={{ x: 0 }}
+                  exit={{ x: "-100%" }}
+                  transition={{ duration: 0.7, ease: [0.32, 0.72, 0, 1] }}
+                  className="absolute inset-0 w-full h-full"
+                >
+                  <img
+                    src={currentSlide.image}
+                    className="w-full h-full object-cover brightness-100 grayscale-0"
+                    alt={currentSlide.subtitle}
+                  />
+                  {/* Subtle color grading overlay */}
+                  <div className="absolute inset-0 bg-purple-900/5 mix-blend-overlay pointer-events-none" />
+                </motion.div>
+              </AnimatePresence>
 
-      <Link
-        to="/team"
-        className="text-blue-600 underline cursor-pointer hover:text-purple-600 transition"
-      >
-        View all leaders →
-      </Link>
-    </div>
-
-    <div className="h-80 overflow-hidden rounded-xl bg-gray-100 flex items-center relative">
-    
-      {/* FADE */}
-      <div className="absolute left-0 top-0 h-full w-20 bg-gradient-to-r from-gray-100 to-transparent z-10"></div>
-      <div className="absolute right-0 top-0 h-full w-20 bg-gradient-to-l from-gray-100 to-transparent z-10"></div>
-    
-      <motion.div
-        className="flex gap-8 items-center"
-        animate={{ x: [0, -1000] }} // 🔥 FIXED
-        transition={{
-          repeat: Infinity,
-          duration: 20,
-          ease: "linear",
-        }}
-      >
-        {loopData.map((member, i) => (
-          <div key={i} className="flex flex-col items-center min-w-[180px]">
-    
-            {/* IMAGE */}
-            <div className="w-50 h-60 rounded-xl overflow-hidden border-2 border-white shadow-md">
-              <img
-                src={member.img}
-                alt={member.name}
-                className="w-full h-full object-cover"
-              />
+              {/* BOTTOM PROMPT BAR: Anchored to bottom of image box */}
+              <div className="absolute bottom-6 left-4 right-4 md:left-6 md:right-6 bg-black p-4 flex items-center justify-between border border-white/5 shadow-2xl z-50">
+                <div className="flex-1 mr-4 overflow-hidden">
+                  <AnimatePresence mode="wait">
+                    <motion.p 
+                      key={`prompt-${currentSlide.id}`}
+                      initial={{ opacity: 0, y: 5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-[11px] font-bold tracking-wider uppercase text-center"
+                    >
+                      <span className="text-white/40">HEY</span>{" "}
+                      <span className="text-blue-500">@TEAM</span>,{" "}
+                      {currentSlide.prompt.split('@TEAM,')[1]}
+                    </motion.p>
+                  </AnimatePresence>
+                </div>
+                
+              </div>
             </div>
-    
-            {/* NAME */}
-            <p className="text-sm mt-2 text-gray-900 font-medium">
-              {member.name}
-            </p>
-    
           </div>
-        ))}
-      </motion.div>
-    
-    </div>
-   
+        </div>
 
-  </div>
-</section>
-    
+      </div>
+
       
+
+      {/* Film Grain Texture */}
+      <div className="fixed inset-0 pointer-events-none opacity-[0.03] bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
+    </div> 
 
       {/* ================= TESTIMONIALS ================= */}
       <section className="py-20 px-16 bg-gray-50">
-  <h2 className="text-3xl font-bold mb-10 text-[#531192]">
-    Our Latest Client's Feedback
+  <h2 className="text-4xl font-bold mb-10 text-[#531192]">
+    OUR LATEST CLIENT'S FEEDBACK
   </h2>
 
   <motion.div
@@ -867,6 +947,3 @@ bg-gradient-to-b from-white to-transparent z-20 pointer-events-none" />
 
 
 
-
-
- 
